@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<title>쿠링뮤직 — 제작기로 돌아가는 중</title>
+<style>
+  body{margin:0;font:17px/1.6 -apple-system,"Segoe UI","Malgun Gothic",sans-serif;background:#0f1117;color:#eee;display:grid;place-items:center;min-height:100vh}
+  .box{max-width:560px;padding:28px 24px;text-align:center}
+  h1{font-size:20px;margin:0 0 10px}
+  p{margin:8px 0;color:#c9ccd6}
+  a{color:#9ab4ff;word-break:break-all}
+  .bad{color:#ffb3b3}
+  small{color:#8b90a0}
+</style>
+</head>
+<body>
+<div class="box">
+  <h1 id="t">🔒 메타 로그인 확인 중…</h1>
+  <p id="m">곧 쿠링뮤직 제작기로 돌아가요. (제작기가 켜져 있어야 해요)</p>
+  <p id="l"></p>
+  <p><small>이 페이지는 메타(인스타·페이스북·스레드) 로그인 결과를 내 PC 의 제작기(127.0.0.1)로만 넘겨 주는 중계 페이지예요. 아무것도 저장하지 않아요.</small></p>
+</div>
+<script>
+(function () {
+  // 🔒 쿠링뮤직 메타 로그인 바운스 페이지 — 짝: 제작기 lib/metalogin.js (state 형식 · 돌아오는 주소)
+  //   하는 일 딱 하나: 메타가 붙여 준 code·state(·error) 를 http://127.0.0.1:<포트>/oauth/callback 로 그대로 넘겨요
+  //   안전장치: 넘기는 곳은 127.0.0.1 로 고정 · 포트는 state 끝의 숫자(1024~65535)만 · 다른 값이 오면 안 넘기고 멈춰요
+  var $ = function (id) { return document.getElementById(id); };
+  var qs = new URLSearchParams(location.search);
+  var state = qs.get('state') || '';
+  var m = /^[0-9a-f]{32}-(\d{4,5})$/.exec(state);
+  var port = m ? Number(m[1]) : 0;
+  var fail = function (why) { $('t').textContent = '❌ 제작기로 넘길 수 없어요'; $('t').className = 'bad'; $('m').textContent = why; };
+  if (!m || port < 1024 || port > 65535) { fail('로그인 확인 값(state)이 제작기 것이 아니에요 — 제작기에서 [🔗 연결]을 다시 눌러 주세요.'); return; }
+  var out = new URLSearchParams();
+  ['code', 'state', 'error', 'error_reason', 'error_description', 'error_code'].forEach(function (k) { var v = qs.get(k); if (v != null && v !== '') out.set(k, v); });
+  if (!out.get('code') && !out.get('error')) { fail('메타가 로그인 코드를 주지 않았어요 — 제작기에서 [🔗 연결]을 다시 눌러 주세요.'); return; }
+  var target = 'http://127.0.0.1:' + port + '/oauth/callback?' + out.toString();
+  $('l').innerHTML = '자동으로 안 넘어가면 → <a id="go" href="#">여기를 눌러 제작기로 돌아가기</a>';
+  $('go').setAttribute('href', target);
+  // 제작기가 꺼져 있으면 브라우저가 "연결할 수 없음" 을 보여 줘요 → 제작기를 켜고 위 링크를 다시 누르면 돼요 (code 는 몇 분 안에만 유효)
+  setTimeout(function () { location.replace(target); }, 150);
+})();
+</script>
+</body>
+</html>
